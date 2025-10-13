@@ -51,16 +51,20 @@ app.post("/webhook", async (req, res) => {
   const body = req.body.Body; // mensaje que envió
   console.log(`Mensaje de ${from}: ${body}`);
 
-  // Respuesta automática opcional
-  await client.messages.create({
-    from: process.env.TWILIO_WHATSAPP_FROM, // número sandbox
-    to: from,
-    body: `Recibí tu mensaje: ${body}`
-  });
+  try {
+    await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_FROM, // número sandbox
+      to: from,
+      body: `Recibí tu mensaje: ${body}`
+    });
+  } catch (err) {
+    console.error("Error enviando respuesta:", err.message);
+  }
 
   res.set("Content-Type", "text/xml");
   res.send("<Response></Response>");
 });
+
 
 
 // ?? Listar mensajes (opcional)

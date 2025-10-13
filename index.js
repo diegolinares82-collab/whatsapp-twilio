@@ -50,15 +50,9 @@ app.post("/webhook", async (req, res) => {
   const from = req.body.From;
   const body = req.body.Body;
 
-  if (!from || !body) {
-    console.log("Evento no es mensaje:", req.body);
-    return res.send("<Response></Response>");
-  }
-
-  console.log(`Mensaje de ${from}: ${body}`);
-
-  try {
-    // 1?? Guardar siempre en MongoDB
+  // Solo guardar si es mensaje real
+  if (from && body) {
+    console.log(`Mensaje de ${from}: ${body}`);
     await Mensaje.create({
       numero: from,
       cuerpo: body,
@@ -67,19 +61,18 @@ app.post("/webhook", async (req, res) => {
       metadata: req.body
     });
 
-    // 2?? Intentar responder automáticamente
+    // Responder opcionalmente
     try {
       await client.messages.create({
-        from: process.env.TWILIO_WHATSAPP_FROM, // Sandbox
+        from: process.env.TWILIO_WHATSAPP_FROM,
         to: from,
         body: `Recibí tu mensaje: ${body}`
       });
     } catch (err) {
-      console.warn("Error enviando respuesta, pero mensaje guardado:", err.message);
+      console.warn("Error enviando respuesta:", err.message);
     }
-
-  } catch (err) {
-    console.error("Error guardando mensaje:", err.message);
+  } else {
+    console.log("Evento no es mensaje:", req.body);
   }
 
   res.set("Content-Type", "text/xml");

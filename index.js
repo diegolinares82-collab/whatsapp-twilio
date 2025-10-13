@@ -47,37 +47,27 @@ app.post('/enviar', async (req, res) => {
 
 // ?? Webhook para recibir mensajes entrantes
 app.post("/webhook", async (req, res) => {
-  const from = req.body.From;
-  const body = req.body.Body;
+  const data = req.body;
 
-  // Solo guardar si es mensaje real
-  if (from && body) {
-    console.log(`Mensaje de ${from}: ${body}`);
+  // Guardamos TODO lo que Twilio nos envía
+  try {
     await Mensaje.create({
-      numero: from,
-      cuerpo: body,
-      direccion: "in",
-      estado: "received",
-      metadata: req.body
+      numero: data.From || data.To || "desconocido",
+      cuerpo: data.Body || JSON.stringify(data), // si no hay Body, guardamos todo el payload
+      direccion: data.From ? "in" : "out",       // si viene From, es entrante; si no, puede ser nuestro envío
+      estado: data.MessageStatus || "unknown",
+      metadata: data
     });
-
-    // Responder opcionalmente
-    try {
-      await client.messages.create({
-        from: process.env.TWILIO_WHATSAPP_FROM,
-        to: from,
-        body: `Recibí tu mensaje: ${body}`
-      });
-    } catch (err) {
-      console.warn("Error enviando respuesta:", err.message);
-    }
-  } else {
-    console.log("Evento no es mensaje:", req.body);
+    console.log("Webhook guardado:", data.MessageSid || "sin SID");
+  } catch (err) {
+    console.error("Error guardando webhook:", err.message);
   }
 
+  // Respuesta al webhook de Twilio
   res.set("Content-Type", "text/xml");
   res.send("<Response></Response>");
 });
+
 
 
 

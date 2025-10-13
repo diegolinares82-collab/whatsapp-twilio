@@ -50,7 +50,6 @@ app.post("/webhook", async (req, res) => {
   const from = req.body.From;
   const body = req.body.Body;
 
-  // Solo procesar si es un mensaje real
   if (!from || !body) {
     console.log("Webhook de estado u otro evento:", req.body);
     return res.send("<Response></Response>");
@@ -59,13 +58,34 @@ app.post("/webhook", async (req, res) => {
   console.log(`Mensaje de ${from}: ${body}`);
 
   try {
-    await client.messages.create({
+    // Guardar mensaje entrante
+    await Mensaje.create({
+      direccion: "in",
+      numero: from,
+      cuerpo: body,
+      estado: "received",
+      metadata: req.body
+    });
+
+    // Responder automáticamente
+    const respuesta = await client.messages.create({
       from: process.env.TWILIO_WHATSAPP_FROM,
       to: from,
       body: `Recibí tu mensaje: ${body}`
     });
+
+    // Guardar respuesta
+    await Mensaje.create({
+      direccion: "out",
+      numero: from,
+      cuerpo: `Recibí tu mensaje: ${body}`,
+      estado: respuesta.status,
+      sid: respuesta.sid,
+      metadata: respuesta
+    });
+
   } catch (err) {
-    console.error("Error enviando respuesta:", err.message);
+    console.error("Error procesando mensaje:", err.message);
   }
 
   res.set("Content-Type", "text/xml");

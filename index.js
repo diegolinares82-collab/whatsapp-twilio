@@ -47,14 +47,20 @@ app.post('/enviar', async (req, res) => {
 
 // ?? Webhook para recibir mensajes entrantes
 app.post("/webhook", async (req, res) => {
-  const from = req.body.From; // número del usuario
-  const body = req.body.Body; // mensaje que envió
+  const from = req.body.From;
+  const body = req.body.Body;
+
+  if (!from || !body) {
+    console.log("Mensaje inválido:", req.body);
+    return res.send("<Response></Response>");
+  }
+
   console.log(`Mensaje de ${from}: ${body}`);
 
   try {
     await client.messages.create({
-      from: process.env.TWILIO_WHATSAPP_FROM, // número sandbox
-      to: from,
+      from: process.env.TWILIO_WHATSAPP_FROM, // sandbox
+      to: from, // tu WhatsApp real
       body: `Recibí tu mensaje: ${body}`
     });
   } catch (err) {
@@ -64,6 +70,7 @@ app.post("/webhook", async (req, res) => {
   res.set("Content-Type", "text/xml");
   res.send("<Response></Response>");
 });
+
 
 
 

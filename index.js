@@ -50,8 +50,9 @@ app.post("/webhook", async (req, res) => {
   const from = req.body.From;
   const body = req.body.Body;
 
+  // Solo procesar si es un mensaje real
   if (!from || !body) {
-    console.log("Mensaje inválido:", req.body);
+    console.log("Webhook de estado u otro evento:", req.body);
     return res.send("<Response></Response>");
   }
 
@@ -59,8 +60,8 @@ app.post("/webhook", async (req, res) => {
 
   try {
     await client.messages.create({
-      from: process.env.TWILIO_WHATSAPP_FROM, // sandbox
-      to: from, // tu WhatsApp real
+      from: process.env.TWILIO_WHATSAPP_FROM,
+      to: from,
       body: `Recibí tu mensaje: ${body}`
     });
   } catch (err) {
@@ -70,6 +71,7 @@ app.post("/webhook", async (req, res) => {
   res.set("Content-Type", "text/xml");
   res.send("<Response></Response>");
 });
+
 
 
 

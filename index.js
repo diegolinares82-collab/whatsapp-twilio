@@ -51,7 +51,7 @@ app.post("/webhook", async (req, res) => {
 
   // Guardamos TODO lo que Twilio nos envía
   try {
-    const {cliente, pedido} = parsePedido(data.Body)
+    const {cliente, pedido} = parsearMensaje(data.Body)
     await Mensaje.create({
       numero: data.From || data.To || "desconocido",
       cuerpo: data.Body , cliente, pedido, // si no hay Body, guardamos todo el payload
@@ -71,20 +71,33 @@ app.post("/webhook", async (req, res) => {
   res.send("<Response></Response>");
 });
 
+
 function parsearMensaje(texto) {
   const lineas = texto.split('\n').map(l => l.trim()).filter(l => l);
 
   let cliente = null;
   let pedido = [];
 
-  // Primera línea: Cliente
-  const matchCliente = lineas[0].match(/cliente:\s*(.+?)\s*pedido:/i);
+  // 1?? Cliente + primer pedido en la misma línea
+  const primera = lineas[0];
+
+  const matchCliente = primera.match(/cliente:\s*(.+?)\s*pedido:/i);
   if (matchCliente) {
     cliente = matchCliente[1].trim();
   }
 
-  // Pedidos (desde la primera línea que tenga números)
-  for (let linea of lineas) {
+  const matchPrimerPedido = primera.match(/pedido:\s*(\d+)\s+(.+)/i);
+  if (matchPrimerPedido) {
+    pedido.push({
+      cantidad: parseInt(matchPrimerPedido[1]),
+      producto: matchPrimerPedido[2].trim()
+    });
+  }
+
+  // 2?? Resto de pedidos en las siguientes líneas
+  for (let i = 1; i < lineas.length; i++) {
+    const linea = lineas[i];
+
     const matchPedido = linea.match(/^(\d+)\s+(.+)/);
     if (matchPedido) {
       pedido.push({

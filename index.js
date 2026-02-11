@@ -122,6 +122,52 @@ app.get("/mensajes", async (req, res) => {
   res.json(mensajes);
 });
 
+
+app.post("/reportes/inventario", async (req, res) => {
+  try {
+    const { fechaInicio, fechaFin } = req.body;
+
+    const inicio = new Date(fechaInicio);
+    const fin = new Date(fechaFin);
+
+    // Ajuste para incluir todo el día
+    fin.setHours(23, 59, 59, 999);
+
+    const resultado = await Mensaje.aggregate([
+      {
+        $match: {
+          fecha: { $gte: inicio, $lte: fin }
+        }
+      },
+      { $unwind: "$pedido" },
+      {
+        $group: {
+          _id: "$pedido.producto",
+          total: { $sum: "$pedido.cantidad" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          producto: "$_id",
+          total: 1
+        }
+      },
+      { $sort: { producto: 1 } }
+    ]);
+
+    res.json({
+      rango: { fechaInicio, fechaFin },
+      inventario: resultado
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error generando inventario" });
+  }
+});
+
+
 app.listen(process.env.PORT, () => {
   console.log(`?? Servidor corriendo en http://localhost:${process.env.PORT}`);
 });

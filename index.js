@@ -60,6 +60,8 @@ app.post("/webhook", async (req, res) => {
       metadata: data
     });
     console.log("Webhook guardado:", data.MessageSid || "sin SID");
+    console.log("CLIENTE ", cliente)
+    console.log("PEDIDO", pedido)
   } catch (err) {
     console.error("Error guardando webhook:", err.message);
   }

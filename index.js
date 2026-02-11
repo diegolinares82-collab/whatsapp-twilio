@@ -71,36 +71,26 @@ app.post("/webhook", async (req, res) => {
   res.send("<Response></Response>");
 });
 
-
-function parsePedido(texto) {
-  const lineas = texto.split("\n").map(l => l.trim()).filter(Boolean);
+function parsearMensaje(texto) {
+  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l);
 
   let cliente = null;
-  const pedido = [];
+  let pedido = [];
 
-  for (const linea of lineas) {
-    // Cliente
-    if (/cliente:/i.test(linea)) {
-      const match = linea.match(/cliente:\s*(.+?)(pedido:|$)/i);
-      if (match) cliente = match[1].trim();
-      continue;
-    }
+  // Primera línea: Cliente
+  const matchCliente = lineas[0].match(/cliente:\s*(.+?)\s*pedido:/i);
+  if (matchCliente) {
+    cliente = matchCliente[1].trim();
+  }
 
-    // Items tipo: "2 centro", "5 kilos de murillo"
-    const matchCantidad = linea.match(/^(\d+)\s+(.*)$/i);
-    if (matchCantidad) {
-      let cantidad = parseInt(matchCantidad[1], 10);
-      let resto = matchCantidad[2].toLowerCase();
-
-      let unidad = "und";
-      let producto = resto;
-
-      if (resto.includes("kilo")) {
-        unidad = "kilos";
-        producto = resto.replace(/kilos?\s+de\s+/i, "").trim();
-      }
-
-      pedido.push({ producto, cantidad, unidad });
+  // Pedidos (desde la primera línea que tenga números)
+  for (let linea of lineas) {
+    const matchPedido = linea.match(/^(\d+)\s+(.+)/);
+    if (matchPedido) {
+      pedido.push({
+        cantidad: parseInt(matchPedido[1]),
+        producto: matchPedido[2].trim()
+      });
     }
   }
 

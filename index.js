@@ -51,9 +51,10 @@ app.post("/webhook", async (req, res) => {
 
   // Guardamos TODO lo que Twilio nos envía
   try {
+    const {cliente, pedido} = parsePedido(data.Body)
     await Mensaje.create({
       numero: data.From || data.To || "desconocido",
-      cuerpo: data.Body || JSON.stringify(data), // si no hay Body, guardamos todo el payload
+      cuerpo: data.Body , cliente, pedido, // si no hay Body, guardamos todo el payload
       direccion: data.From ? "in" : "out",       // si viene From, es entrante; si no, puede ser nuestro envío
       estado: data.MessageStatus || "unknown",
       metadata: data
@@ -67,6 +68,42 @@ app.post("/webhook", async (req, res) => {
   res.set("Content-Type", "text/xml");
   res.send("<Response></Response>");
 });
+
+
+function parsePedido(texto) {
+  const lineas = texto.split("\n").map(l => l.trim()).filter(Boolean);
+
+  let cliente = null;
+  const pedido = [];
+
+  for (const linea of lineas) {
+    // Cliente
+    if (/cliente:/i.test(linea)) {
+      const match = linea.match(/cliente:\s*(.+?)(pedido:|$)/i);
+      if (match) cliente = match[1].trim();
+      continue;
+    }
+
+    // Items tipo: "2 centro", "5 kilos de murillo"
+    const matchCantidad = linea.match(/^(\d+)\s+(.*)$/i);
+    if (matchCantidad) {
+      let cantidad = parseInt(matchCantidad[1], 10);
+      let resto = matchCantidad[2].toLowerCase();
+
+      let unidad = "und";
+      let producto = resto;
+
+      if (resto.includes("kilo")) {
+        unidad = "kilos";
+        producto = resto.replace(/kilos?\s+de\s+/i, "").trim();
+      }
+
+      pedido.push({ producto, cantidad, unidad });
+    }
+  }
+
+  return { cliente, pedido };
+}
 
 
 

@@ -55,10 +55,15 @@ app.post('/enviar', async (req, res) => {
 // ?? Webhook para recibir mensajes entrantes
 app.post("/webhook", async (req, res) => {
   const data = req.body;
+  const body = (data.Body || "").replace(/\s+/g, " ").trim();
+
+  console.log("BODY RAW >>>", JSON.stringify(body));
 
   // Guardamos TODO lo que Twilio nos envía
   try {
     const {cliente, pedido} = parsearMensaje(data.Body)
+    console.log("CLIENTE >>>", cliente);
+    console.log("PEDIDO >>>", pedido);
     await Mensaje.create({
       numero: data.From || data.To || "desconocido",
       cuerpo: data.Body , cliente, pedido, // si no hay Body, guardamos todo el payload
@@ -81,6 +86,7 @@ app.post("/webhook", async (req, res) => {
 
 
 function parsearMensaje(texto = "") {
+  
   const lineas = texto.split('\n').map(l => l.trim()).filter(l => l);
 
   let cliente = null;
@@ -96,6 +102,7 @@ function parsearMensaje(texto = "") {
   }
 
   const restoPrimera = primera.split(/pedido\s*:/i)[1];
+  console.log("RESTO PRIMERA >>>", JSON.stringify(restoPrimera));
   if (restoPrimera) {
     pedido.push(...parsearLinea(restoPrimera));
   }

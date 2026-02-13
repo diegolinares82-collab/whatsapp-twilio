@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 import twilio from "twilio";
 import { conectarMongoDB } from "./db.js";
 import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js"
 import  Mensaje  from "./models/Mensaje.js";
 
 dotenv.config();

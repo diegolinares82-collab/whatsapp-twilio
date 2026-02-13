@@ -89,7 +89,7 @@ function parsearMensaje(texto) {
   // 1?? Cliente + primer pedido en la misma línea
   const primera = lineas[0];
 
-  const matchCliente = primera.match(/cliente:\s*(.+?)\s*pedido:/i);
+  const matchCliente = primera.match(/cliente\s*:\s*(.+?)\s*pedido\s*:/i);
   if (matchCliente) {
     cliente = matchCliente[1].trim();
   }

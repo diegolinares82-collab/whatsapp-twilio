@@ -77,6 +77,7 @@ app.post("/webhook", async (req, res) => {
 });
 
 
+
 function parsearMensaje(texto) {
   const lineas = texto.split('\n').map(l => l.trim()).filter(l => l);
 
@@ -91,28 +92,42 @@ function parsearMensaje(texto) {
     cliente = matchCliente[1].trim();
   }
 
-  const matchPrimerPedido = primera.match(/pedido:\s*(\d+)\s+(.+)/i);
-  if (matchPrimerPedido) {
-    pedido.push({
-      cantidad: parseInt(matchPrimerPedido[1]),
-      producto: matchPrimerPedido[2].trim()
-    });
+  const restoPrimera = primera.split(/pedido:/i)[1];
+  if (restoPrimera) {
+    const itemsPrimera = parsearLinea(restoPrimera);
+    pedido.push(...itemsPrimera);
   }
 
   // 2?? Resto de pedidos en las siguientes líneas
   for (let i = 1; i < lineas.length; i++) {
     const linea = lineas[i];
-
-    const matchPedido = linea.match(/^(\d+)\s+(.+)/);
-    if (matchPedido) {
-      pedido.push({
-        cantidad: parseInt(matchPedido[1]),
-        producto: matchPedido[2].trim()
-      });
-    }
+    const items = parsearLinea(linea);
+    pedido.push(...items);
   }
 
   return { cliente, pedido };
+}
+
+function parsearLinea(linea) {
+  const resultados = [];
+  const regex = /(\d+)\s+([^\d]+)/g;
+  let match;
+
+  while ((match = regex.exec(linea)) !== null) {
+    resultados.push({
+      cantidad: parseInt(match[1], 10),
+      producto: normalizarProducto(match[2])
+    });
+  }
+
+  return resultados;
+}
+
+function normalizarProducto(nombre) {
+  return nombre
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 

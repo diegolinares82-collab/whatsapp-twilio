@@ -80,13 +80,14 @@ app.post("/webhook", async (req, res) => {
 
 
 
-function parsearMensaje(texto) {
+function parsearMensaje(texto = "") {
   const lineas = texto.split('\n').map(l => l.trim()).filter(l => l);
 
   let cliente = null;
   let pedido = [];
 
-  // 1?? Cliente + primer pedido en la misma línea
+  if (lineas.length === 0) return { cliente, pedido };
+
   const primera = lineas[0];
 
   const matchCliente = primera.match(/cliente\s*:\s*(.+?)\s*pedido\s*:/i);
@@ -94,22 +95,13 @@ function parsearMensaje(texto) {
     cliente = matchCliente[1].trim();
   }
 
-  const restoPrimera = primera.split(/pedido:/i)[1];
+  const restoPrimera = primera.split(/pedido\s*:/i)[1];
   if (restoPrimera) {
-    const itemsPrimera = parsearLinea(restoPrimera);
-    pedido.push(...itemsPrimera);
-  }
-
-  // 2?? Resto de pedidos en las siguientes líneas
-  for (let i = 1; i < lineas.length; i++) {
-    const linea = lineas[i];
-    const items = parsearLinea(linea);
-    pedido.push(...items);
+    pedido.push(...parsearLinea(restoPrimera));
   }
 
   return { cliente, pedido };
 }
-
 function parsearLinea(linea = "") {
   const resultados = [];
   const texto = linea.replace(/\s+/g, " ").trim().toLowerCase();
@@ -118,14 +110,10 @@ function parsearLinea(linea = "") {
   let match;
 
   while ((match = regex.exec(texto)) !== null) {
-    const cantidad = parseInt(match[1], 10);
-    const productoRaw = match[2].trim();
-
-    const producto = normalizarProducto
-      ? normalizarProducto(productoRaw)
-      : productoRaw;
-
-    resultados.push({ cantidad, producto });
+    resultados.push({
+      cantidad: parseInt(match[1], 10),
+      producto: normalizarProducto(match[2].trim())
+    });
   }
 
   return resultados;

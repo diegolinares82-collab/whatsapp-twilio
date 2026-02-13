@@ -16,7 +16,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 app.use(cors()); // ?? permite todos los orígenes (ideal para pruebas)
-app.options("*", cors());
+
 // Twilio
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const fromWhats = process.env.TWILIO_WHATSAPP_FROM;

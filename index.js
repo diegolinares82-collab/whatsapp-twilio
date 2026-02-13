@@ -1,5 +1,4 @@
 import express from "express";
-import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import twilio from "twilio";
 import { conectarMongoDB } from "./db.js";
@@ -7,14 +6,17 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js"
 import  Mensaje  from "./models/Mensaje.js";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+app.use(cors()); // ?? permite todos los orígenes (ideal para pruebas)
+app.options("*", cors());
 // Twilio
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const fromWhats = process.env.TWILIO_WHATSAPP_FROM;

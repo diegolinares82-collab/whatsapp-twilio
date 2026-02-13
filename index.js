@@ -110,16 +110,22 @@ function parsearMensaje(texto) {
   return { cliente, pedido };
 }
 
-function parsearLinea(linea) {
+function parsearLinea(linea = "") {
   const resultados = [];
-  const regex = /(\d+)\s+([^\d]+)/g;
+  const texto = linea.replace(/\s+/g, " ").trim().toLowerCase();
+
+  const regex = /(\d+)\s+([a-zαινσϊρό]+(?:\s+[a-zαινσϊρό]+)*)/gi;
   let match;
 
-  while ((match = regex.exec(linea)) !== null) {
-    resultados.push({
-      cantidad: parseInt(match[1], 10),
-      producto: normalizarProducto(match[2])
-    });
+  while ((match = regex.exec(texto)) !== null) {
+    const cantidad = parseInt(match[1], 10);
+    const productoRaw = match[2].trim();
+
+    const producto = normalizarProducto
+      ? normalizarProducto(productoRaw)
+      : productoRaw;
+
+    resultados.push({ cantidad, producto });
   }
 
   return resultados;

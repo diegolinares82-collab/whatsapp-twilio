@@ -3,12 +3,17 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import twilio from "twilio";
 import { conectarMongoDB } from "./db.js";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import  Mensaje  from "./models/Mensaje.js";
 
 dotenv.config();
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // Twilio
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);

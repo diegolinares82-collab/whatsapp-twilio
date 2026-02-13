@@ -127,8 +127,8 @@ app.post("/reportes/inventario", async (req, res) => {
   try {
     const { fechaInicio, fechaFin } = req.body;
 
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
+    const inicio = dayjs.tz(fechaInicio, "America/Bogota").startOf("day").utc().toDate();
+    const fin =  dayjs.tz(fechaFin, "America/Bogota").endOf("day").utc().toDate();
 
     // Ajuste para incluir todo el día
     fin.setHours(23, 59, 59, 999);
